@@ -5,8 +5,8 @@ import Data.Char
 import Data.Int 
 import Data.List
 import Data.Array
-import qualified Data.ByteString.Lazy as L
-import qualified Data.ByteString.Lazy.Char8 as C
+import qualified Data.ByteString as L
+import qualified Data.ByteString.Char8 as C
 import Text.Regex.TDFA    
 
 main = do
@@ -17,15 +17,23 @@ main = do
   let pv = head $ L.unpack $ C.singleton ';'
       
   --let myLines = L.split n contents
-  let myLines = splitCrlf [] contents
+  putStrLn "before splitCrlf"    
+  let myLines =  splitCrlf [] contents
+  putStrLn "after splitCrlf"
   let myParsedLines = map parseLine2 myLines
+  putStrLn "after map parseLine2"
   
   let myParsedEndedLines = map (\bs -> L.snoc (L.snoc bs pv) n ) myParsedLines
-  let result = L.concat  myParsedEndedLines
+  putStrLn "after map snoc"
   
+  let result = L.concat  myParsedEndedLines
+  putStrLn "after concat"
   --L.writeFile "../data/dbo.AgentActivityLog.sql.clean.unix.dated" result
   L.writeFile "../data/dbo.CallDetail.clean.dated.sql" result  
   
+--parseFile inFile outFile = 
+--  hIn = mkFileHandle "../data/dbo.CallDetail.clean" ReadMode 
+
 splitCrlf :: [L.ByteString] -> L.ByteString -> [L.ByteString]  
 splitCrlf acc line = 
   let pos = searchCrlf line
@@ -36,17 +44,17 @@ splitCrlf acc line =
           else splitCrlf (acc ++ [L.take pos line]) (L.drop (pos+2) line)
           
                
-searchCrlf :: L.ByteString -> Int64
-searchCrlf line = searchCrlf_ 0 line
+searchCrlf :: L.ByteString -> Int
+searchCrlf line = fromIntegral $ searchCrlf_ 0 line
 
-searchCrlf_ :: Int64 -> L.ByteString -> Int64
+searchCrlf_ :: Int -> L.ByteString -> Int
 searchCrlf_ cpt line =      
   let cr = fromIntegral (ord '\r')
       lf = fromIntegral (ord '\n')
       posCr =  L.elemIndex cr line
   in case posCr of Nothing -> -1
                    Just pos -> if (L.index line (pos+1)) == lf
-                               then pos
+                               then  pos
                                else searchCrlf_ (cpt+pos) (L.drop pos line) 
 
 parseLine2 :: L.ByteString -> L.ByteString    
